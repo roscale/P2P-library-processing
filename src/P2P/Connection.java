@@ -56,6 +56,7 @@ public class Connection {
         }
 
         sendBytes(bos.toByteArray());
+        System.out.println("SENT");
     }
 
     private ByteArrayInputStream receiveBytes()
@@ -72,6 +73,7 @@ public class Connection {
             if (c.available() > 0)
                 bis = new ByteArrayInputStream(c.readBytes());
 
+
         if (bis != null && bis.available() > 0)
             return bis;
         else
@@ -82,9 +84,40 @@ public class Connection {
     {
         ArrayList<Object> objs = new ArrayList<>();
 
-        ByteArrayInputStream bis = receiveBytes();
+	    ByteArrayInputStream bis = receiveBytes();
         if (bis == null)
             return objs; // Empty array
+	    else
+        {
+//        	System.out.println("Before: ");
+//        	printInputStream(bis);
+
+	        // Give it more chances
+	        // Sleep for 2 milliseconds before each chance
+
+	        try
+	        { Thread.sleep(2); }
+	        catch (InterruptedException e)
+	        { e.printStackTrace(); }
+
+	        ByteArrayInputStream next;
+	        while ((next = receiveBytes()) != null)
+	        {
+				bis = (ByteArrayInputStream) concatInputStreams(bis, next);
+
+//		        System.out.println("Next: ");
+//		        printInputStream(bis);
+
+		        try
+		        { Thread.sleep(2); }
+		        catch (InterruptedException e)
+		        { e.printStackTrace(); }
+	        }
+        }
+
+//	    System.out.println("Final: ");
+//	    printInputStream(bis);
+
 
         // Create the object input stream
         AppendingObjectInputStream ois = null;
@@ -106,6 +139,51 @@ public class Connection {
 
         return objs;
     }
+
+	//
+	// Helper functions
+	//
+
+	InputStream concatInputStreams(InputStream a, InputStream b)
+	{
+		SequenceInputStream concat = new SequenceInputStream(a, b);
+
+		ByteArrayOutputStream result = new ByteArrayOutputStream();
+		byte[] buffer = new byte[64];
+		int length;
+		try
+		{
+			while ((length = concat.read(buffer)) != -1)
+				result.write(buffer, 0, length);
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+
+		return new ByteArrayInputStream(result.toByteArray());
+	}
+
+	void printInputStream(InputStream is)
+	{
+		ByteArrayOutputStream result = new ByteArrayOutputStream();
+		byte[] a = new byte[50];
+		int length;
+
+		try
+		{
+			while ((length = is.read(a)) != -1)
+				result.write(a, 0, length);
+
+			is.reset();
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+
+		System.out.println("Input stream: " + result.toString());
+	}
 }
 
 //
