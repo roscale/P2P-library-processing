@@ -39,6 +39,18 @@ public class Connection {
 			c.stop();
 	}
 
+	public boolean available()
+	{
+		if (type == ConnectionType.SERVER)
+			if (s.available() != null)
+				return true;
+
+		else if (type == ConnectionType.CLIENT)
+			return true;
+
+		return false;
+	}
+
     private void sendBytes(byte[] byteArray)
     {
         if (type == ConnectionType.SERVER)
