@@ -31,6 +31,14 @@ public class Connection {
         type = ConnectionType.CLIENT;
     }
 
+	public void stop()
+	{
+		if (type == ConnectionType.SERVER)
+			s.stop();
+		else if (type == ConnectionType.CLIENT)
+			c.stop();
+	}
+
     private void sendBytes(byte[] byteArray)
     {
         if (type == ConnectionType.SERVER)
